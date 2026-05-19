@@ -371,7 +371,7 @@ body {
 
 .slot-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 6px;
 }
 
@@ -379,6 +379,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 .slot-row label span {
@@ -387,6 +388,8 @@ body {
 }
 
 .slot-row input {
+    width: 100%;
+    min-width: 0;
     padding: 8px 10px;
     background: var(--bg-input);
     border: 1px solid var(--border);
