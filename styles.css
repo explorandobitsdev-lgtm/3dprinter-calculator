@@ -701,6 +701,8 @@ footer {
 @media print {
     @page { margin: 18mm; }
 
+    .hidden { display: none !important; }
+
     body {
         background: white !important;
         color: black !important;

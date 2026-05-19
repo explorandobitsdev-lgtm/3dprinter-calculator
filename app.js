@@ -529,7 +529,28 @@ function gerarPDF() {
 
     document.getElementById('quoteTotal').textContent = formatBRL(total);
 
+    // Pergunta se quer incluir o total de horas de impressão
+    const incluirHoras = confirm('Deseja incluir o total de horas de impressão no orçamento?');
+    const horasRow = document.getElementById('quoteHorasRow');
+    if (incluirHoras) {
+        const totalHoras = state.pieces.reduce(
+            (sum, p) => sum + (p.horas || 0) * (p.qtd || 0),
+            0
+        );
+        document.getElementById('quoteTotalHoras').textContent = formatHoras(totalHoras);
+        horasRow.classList.remove('hidden');
+    } else {
+        horasRow.classList.add('hidden');
+    }
+
     window.print();
+}
+
+function formatHoras(horas) {
+    const h = Math.floor(horas);
+    const m = Math.round((horas - h) * 60);
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}min`;
 }
 
 function escapeHtml(str) {
