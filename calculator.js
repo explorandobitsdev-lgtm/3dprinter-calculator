@@ -1,18 +1,33 @@
 /**
  * Lógica de cálculo - independente da interface.
- * Pode ser reutilizada em qualquer front-end ou Node.js.
+ * Suporta múltiplos filamentos (estilo AMS).
  */
 const Calculator = {
     custoFilamento(pesoGramas, precoPorKg) {
         return (pesoGramas / 1000) * precoPorKg;
     },
 
+    /**
+     * Soma o custo de todos os filamentos usados na impressão.
+     * filamentos = [{ peso, precoPorKg, ... }, ...]
+     */
+    custoFilamentos(filamentos) {
+        return filamentos.reduce(
+            (total, f) => total + this.custoFilamento(f.peso || 0, f.precoPorKg || 0),
+            0
+        );
+    },
+
+    pesoTotal(filamentos) {
+        return filamentos.reduce((total, f) => total + (f.peso || 0), 0);
+    },
+
     custoEnergia(watts, horas, custoKwh) {
         return (watts / 1000) * horas * custoKwh;
     },
 
-    custoTotal(filamento, energia, extra = 0) {
-        return filamento + energia + extra;
+    custoTotal(filamentos, energia, extra = 0) {
+        return filamentos + energia + extra;
     },
 
     precoVenda(custoTotal, margemPercent, descontoPercent = 0) {
@@ -27,10 +42,14 @@ const Calculator = {
     },
 
     /**
-     * Calcula tudo de uma vez. Recebe um objeto de inputs e devolve o resultado completo.
+     * Calcula tudo. Recebe um objeto de inputs e devolve resultado completo.
+     * inputs = {
+     *   filamentos: [{ cor, nome, peso, precoPorKg }, ...],
+     *   watts, tempo, precoKwh, custoExtra, margem, desconto
+     * }
      */
     calcular(inputs) {
-        const filamento = this.custoFilamento(inputs.peso, inputs.precoFilamento);
+        const filamento = this.custoFilamentos(inputs.filamentos);
         const energia = this.custoEnergia(inputs.watts, inputs.tempo, inputs.precoKwh);
         const total = this.custoTotal(filamento, energia, inputs.custoExtra);
         const precoBruto = total * (1 + inputs.margem / 100);
@@ -38,8 +57,15 @@ const Calculator = {
         const valorDesconto = precoBruto - venda;
         const lucro = this.lucro(venda, total);
 
+        const detalheFilamentos = inputs.filamentos.map((f) => ({
+            ...f,
+            custo: this.custoFilamento(f.peso || 0, f.precoPorKg || 0)
+        }));
+
         return {
-            custoFilamento: filamento,
+            custoFilamentos: filamento,
+            detalheFilamentos,
+            pesoTotal: this.pesoTotal(inputs.filamentos),
             custoEnergia: energia,
             custoExtra: inputs.custoExtra,
             custoTotal: total,
@@ -50,9 +76,6 @@ const Calculator = {
         };
     },
 
-    /**
-     * Avalia a saúde do lucro e devolve um alerta, se necessário.
-     */
     avaliarLucro(lucroPercent) {
         if (lucroPercent < 0) {
             return { nivel: 'danger', mensagem: 'Atenção: você está vendendo no PREJUÍZO!' };
@@ -67,7 +90,6 @@ const Calculator = {
     }
 };
 
-// Permite uso em Node.js (CLI/testes), opcional.
 if (typeof module !== 'undefined') {
     module.exports = Calculator;
 }
