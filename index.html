@@ -214,9 +214,112 @@
             </section>
         </main>
 
+        <!-- ORÇAMENTO -->
+        <section class="card budget">
+            <h2>Orçamento</h2>
+            <p class="hint">Adicione cada peça. O custo é calculado automaticamente usando a impressora selecionada e a margem definida acima. Edite o preço de venda como quiser.</p>
+
+            <div class="budget-meta">
+                <div class="field">
+                    <label for="clientName">Cliente</label>
+                    <input type="text" id="clientName" placeholder="Nome do cliente (opcional)">
+                </div>
+                <div class="field">
+                    <label for="quoteValidade">Validade do orçamento</label>
+                    <input type="text" id="quoteValidade" value="7 dias">
+                </div>
+            </div>
+
+            <div class="budget-table-wrapper">
+                <table class="budget-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th>Horas</th>
+                            <th>Gramas</th>
+                            <th>R$/kg</th>
+                            <th>Custo</th>
+                            <th>Sugestão</th>
+                            <th>Preço venda</th>
+                            <th>Qtd</th>
+                            <th>Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="budgetTbody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="9" class="total-label">TOTAL DO ORÇAMENTO</td>
+                            <td id="budgetTotal" class="total-value">R$ 0,00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="budget-actions">
+                <button type="button" id="btnAddPiece" class="btn-ghost">+ Adicionar peça</button>
+                <button type="button" id="btnClearBudget" class="btn-ghost danger">Limpar orçamento</button>
+                <button type="button" id="btnGeneratePDF" class="btn-primary">Gerar PDF</button>
+            </div>
+        </section>
+
         <footer>
-            <small>As impressoras são salvas no navegador (localStorage). Resultado atualizado em tempo real.</small>
+            <small>Impressoras e orçamento salvos no navegador (localStorage). Resultado atualizado em tempo real.</small>
         </footer>
+    </div>
+
+    <!-- TEMPLATE: linha de peça do orçamento -->
+    <template id="pieceTemplate">
+        <tr class="piece-row">
+            <td><input type="text" class="p-nome" placeholder="Ex: Vaso pequeno"></td>
+            <td><input type="text" class="p-desc" placeholder="Ex: PLA branco, 15cm"></td>
+            <td><input type="number" class="p-horas" min="0" step="0.1" value="2"></td>
+            <td><input type="number" class="p-gramas" min="0" step="0.1" value="50"></td>
+            <td><input type="number" class="p-preco-fil" min="0" step="0.01" value="120"></td>
+            <td class="p-custo">R$ 0,00</td>
+            <td class="p-sugestao">R$ 0,00</td>
+            <td><input type="number" class="p-venda" min="0" step="0.01" value="0"></td>
+            <td><input type="number" class="p-qtd" min="1" step="1" value="1"></td>
+            <td class="p-subtotal">R$ 0,00</td>
+            <td><button type="button" class="p-remove" title="Remover">×</button></td>
+        </tr>
+    </template>
+
+    <!-- VIEW DE IMPRESSÃO (PDF) -->
+    <div id="printView" class="print-only">
+        <div class="quote-header">
+            <h1>Orçamento</h1>
+            <div class="quote-meta">
+                <p><strong>Data:</strong> <span id="quoteDate"></span></p>
+                <p><strong>Cliente:</strong> <span id="quoteClient"></span></p>
+                <p><strong>Validade:</strong> <span id="quoteValidadePrint"></span></p>
+            </div>
+        </div>
+
+        <table class="quote-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Item</th>
+                    <th>Qtd</th>
+                    <th>Preço unitário</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="quoteTbody"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="quote-total-label">TOTAL</td>
+                    <td id="quoteTotal" class="quote-total-value"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="quote-footer">
+            <p>Orçamento gerado em <span id="quoteGeneratedAt"></span></p>
+        </div>
     </div>
 
     <!-- Template de slot AMS -->

@@ -574,3 +574,217 @@ footer {
     margin-top: 32px;
     color: var(--text-muted);
 }
+
+/* ============ ORÇAMENTO ============ */
+.budget {
+    margin-top: 24px;
+}
+
+.budget-meta {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 700px) {
+    .budget-meta { grid-template-columns: 1fr; }
+}
+
+.budget-table-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.budget-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    min-width: 1000px;
+}
+
+.budget-table th,
+.budget-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.budget-table thead th {
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+    font-weight: 500;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.budget-table tbody td input {
+    width: 100%;
+    min-width: 60px;
+    padding: 6px 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.875rem;
+}
+
+.budget-table tbody td input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.budget-table .p-custo,
+.budget-table .p-sugestao,
+.budget-table .p-subtotal {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.budget-table .p-sugestao { color: var(--text-muted); }
+.budget-table .p-subtotal { color: var(--highlight); font-weight: 600; }
+
+.budget-table .p-remove {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.budget-table .p-remove:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.budget-table tfoot td {
+    background: rgba(250, 204, 21, 0.08);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.budget-table .total-label {
+    text-align: right;
+    color: var(--text-muted);
+}
+
+.budget-table .total-value {
+    color: var(--highlight);
+    font-size: 1.125rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.budget-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.budget-actions .btn-primary {
+    padding: 10px 24px;
+    font-size: 1rem;
+}
+
+/* ============ VIEW DE IMPRESSÃO ============ */
+.print-only { display: none; }
+
+@media print {
+    @page { margin: 18mm; }
+
+    body {
+        background: white !important;
+        color: black !important;
+        padding: 0 !important;
+    }
+
+    body > .container { display: none !important; }
+
+    .print-only {
+        display: block !important;
+        color: black;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .quote-header {
+        border-bottom: 2px solid #333;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+    }
+
+    .quote-header h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+        color: #111;
+    }
+
+    .quote-meta p {
+        margin: 4px 0;
+        font-size: 13px;
+    }
+
+    .quote-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+    }
+
+    .quote-table th,
+    .quote-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #ccc;
+        text-align: left;
+        font-size: 13px;
+    }
+
+    .quote-table th {
+        background: #f5f5f5;
+        font-weight: 700;
+        border-bottom: 2px solid #333;
+    }
+
+    .quote-table td:nth-child(3),
+    .quote-table td:nth-child(4),
+    .quote-table td:nth-child(5),
+    .quote-table th:nth-child(3),
+    .quote-table th:nth-child(4),
+    .quote-table th:nth-child(5) {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .quote-table .item-desc {
+        display: block;
+        color: #666;
+        font-size: 11px;
+        margin-top: 2px;
+    }
+
+    .quote-table tfoot td {
+        border-top: 2px solid #333;
+        border-bottom: none;
+        font-weight: 700;
+        font-size: 15px;
+        padding-top: 14px;
+    }
+
+    .quote-total-label { text-align: right !important; }
+    .quote-total-value { text-align: right !important; }
+
+    .quote-footer {
+        margin-top: 32px;
+        padding-top: 12px;
+        border-top: 1px solid #ddd;
+        font-size: 11px;
+        color: #666;
+    }
+}

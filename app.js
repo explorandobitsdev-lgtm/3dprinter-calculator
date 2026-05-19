@@ -9,6 +9,9 @@
 // ============ STORAGE ============
 const STORAGE_KEY_MACHINES = '3dcalc.machines';
 const STORAGE_KEY_SELECTED = '3dcalc.selectedMachine';
+const STORAGE_KEY_PIECES = '3dcalc.pieces';
+const STORAGE_KEY_CLIENT = '3dcalc.client';
+const STORAGE_KEY_VALIDADE = '3dcalc.validade';
 
 const Storage = {
     loadMachines() {
@@ -25,7 +28,20 @@ const Storage = {
     },
     saveSelectedId(id) {
         localStorage.setItem(STORAGE_KEY_SELECTED, id);
-    }
+    },
+    loadPieces() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY_PIECES);
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    },
+    savePieces(pieces) {
+        localStorage.setItem(STORAGE_KEY_PIECES, JSON.stringify(pieces));
+    },
+    loadClient() { return localStorage.getItem(STORAGE_KEY_CLIENT) || ''; },
+    saveClient(name) { localStorage.setItem(STORAGE_KEY_CLIENT, name); },
+    loadValidade() { return localStorage.getItem(STORAGE_KEY_VALIDADE) || '7 dias'; },
+    saveValidade(v) { localStorage.setItem(STORAGE_KEY_VALIDADE, v); }
 };
 
 // ============ STATE ============
@@ -33,7 +49,8 @@ const state = {
     machines: [],
     selectedMachineId: null,
     filaments: [],
-    editingMachineId: null
+    editingMachineId: null,
+    pieces: []
 };
 
 const DEFAULT_COLORS = ['#ef4444', '#22c55e', '#facc15', '#38bdf8', '#a855f7', '#ec4899', '#f97316', '#14b8a6'];
@@ -332,6 +349,195 @@ function atualizar() {
     renderTabelaMargens(inputs);
 }
 
+// ============ ORÇAMENTO ============
+function novaPeca() {
+    return {
+        nome: '',
+        descricao: '',
+        horas: 2,
+        gramas: 50,
+        precoFilamento: 120,
+        precoVenda: 0,
+        qtd: 1
+    };
+}
+
+function adicionarPeca() {
+    const peca = novaPeca();
+    state.pieces.push(peca);
+    Storage.savePieces(state.pieces);
+    renderBudget();
+}
+
+function removerPeca(index) {
+    state.pieces.splice(index, 1);
+    Storage.savePieces(state.pieces);
+    renderBudget();
+}
+
+function limparOrcamento() {
+    if (state.pieces.length === 0) return;
+    if (!confirm('Remover todas as peças do orçamento?')) return;
+    state.pieces = [];
+    Storage.savePieces(state.pieces);
+    renderBudget();
+}
+
+function calcularPeca(peca) {
+    const machine = getSelectedMachine();
+    const watts = machine ? machine.watts : 0;
+    const precoKwh = parseFloat(document.getElementById('precoKwh').value) || 0;
+    const margem = parseFloat(document.getElementById('margem').value) || 0;
+    return Calculator.peca({
+        gramas: peca.gramas,
+        precoFilamento: peca.precoFilamento,
+        horas: peca.horas,
+        watts,
+        precoKwh,
+        margem
+    });
+}
+
+function renderBudget() {
+    const tbody = document.getElementById('budgetTbody');
+    const template = document.getElementById('pieceTemplate');
+    tbody.innerHTML = '';
+
+    state.pieces.forEach((peca, idx) => {
+        const row = template.content.firstElementChild.cloneNode(true);
+        const $ = (cls) => row.querySelector('.' + cls);
+
+        $('p-nome').value = peca.nome;
+        $('p-desc').value = peca.descricao;
+        $('p-horas').value = peca.horas;
+        $('p-gramas').value = peca.gramas;
+        $('p-preco-fil').value = peca.precoFilamento;
+        $('p-venda').value = peca.precoVenda;
+        $('p-qtd').value = peca.qtd;
+
+        const calc = calcularPeca(peca);
+        $('p-custo').textContent = formatBRL(calc.custo);
+        $('p-sugestao').textContent = formatBRL(calc.sugestao);
+
+        // Se preço de venda ainda não foi definido, usa a sugestão como padrão
+        if (!peca.precoVenda || peca.precoVenda === 0) {
+            peca.precoVenda = parseFloat(calc.sugestao.toFixed(2));
+            $('p-venda').value = peca.precoVenda;
+        }
+
+        $('p-subtotal').textContent = formatBRL(peca.precoVenda * peca.qtd);
+
+        const bindText = (cls, prop) => {
+            $(cls).addEventListener('input', (e) => {
+                peca[prop] = e.target.value;
+                Storage.savePieces(state.pieces);
+            });
+        };
+        const bindNum = (cls, prop, recalc = false) => {
+            $(cls).addEventListener('input', (e) => {
+                peca[prop] = parseFloat(e.target.value) || 0;
+                if (recalc) {
+                    // Recalcula sugestão e atualiza preço de venda se ele estava igual à sugestão anterior
+                    const antesCalc = calcularPeca(peca);
+                    $('p-custo').textContent = formatBRL(antesCalc.custo);
+                    $('p-sugestao').textContent = formatBRL(antesCalc.sugestao);
+                }
+                $('p-subtotal').textContent = formatBRL((peca.precoVenda || 0) * (peca.qtd || 0));
+                Storage.savePieces(state.pieces);
+                atualizarTotalOrcamento();
+            });
+        };
+
+        bindText('p-nome', 'nome');
+        bindText('p-desc', 'descricao');
+        bindNum('p-horas', 'horas', true);
+        bindNum('p-gramas', 'gramas', true);
+        bindNum('p-preco-fil', 'precoFilamento', true);
+        bindNum('p-venda', 'precoVenda');
+        bindNum('p-qtd', 'qtd');
+
+        row.querySelector('.p-remove').addEventListener('click', () => removerPeca(idx));
+
+        tbody.appendChild(row);
+    });
+
+    atualizarTotalOrcamento();
+}
+
+function totalOrcamento() {
+    return state.pieces.reduce(
+        (total, p) => total + (p.precoVenda || 0) * (p.qtd || 0),
+        0
+    );
+}
+
+function atualizarTotalOrcamento() {
+    document.getElementById('budgetTotal').textContent = formatBRL(totalOrcamento());
+}
+
+function recalcularTodasPecas() {
+    // Quando watts/precoKwh/margem mudam, recalcular custos exibidos
+    const rows = document.querySelectorAll('#budgetTbody .piece-row');
+    rows.forEach((row, idx) => {
+        const peca = state.pieces[idx];
+        if (!peca) return;
+        const calc = calcularPeca(peca);
+        row.querySelector('.p-custo').textContent = formatBRL(calc.custo);
+        row.querySelector('.p-sugestao').textContent = formatBRL(calc.sugestao);
+    });
+}
+
+// ============ PDF (via print) ============
+function gerarPDF() {
+    if (state.pieces.length === 0) {
+        alert('Adicione pelo menos uma peça ao orçamento antes de gerar o PDF.');
+        return;
+    }
+
+    const hoje = new Date();
+    const dataFmt = hoje.toLocaleDateString('pt-BR');
+    const horaFmt = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById('quoteDate').textContent = dataFmt;
+    document.getElementById('quoteClient').textContent =
+        document.getElementById('clientName').value.trim() || '—';
+    document.getElementById('quoteValidadePrint').textContent =
+        document.getElementById('quoteValidade').value.trim() || '—';
+    document.getElementById('quoteGeneratedAt').textContent = `${dataFmt} às ${horaFmt}`;
+
+    const tbody = document.getElementById('quoteTbody');
+    tbody.innerHTML = '';
+    let total = 0;
+
+    state.pieces.forEach((p, idx) => {
+        if (!p.nome && !p.descricao) return;
+        const subtotal = (p.precoVenda || 0) * (p.qtd || 0);
+        total += subtotal;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>
+                <strong>${escapeHtml(p.nome || 'Peça sem nome')}</strong>
+                ${p.descricao ? `<span class="item-desc">${escapeHtml(p.descricao)}</span>` : ''}
+            </td>
+            <td>${p.qtd}</td>
+            <td>${formatBRL(p.precoVenda || 0)}</td>
+            <td>${formatBRL(subtotal)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('quoteTotal').textContent = formatBRL(total);
+
+    window.print();
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // ============ INICIALIZAÇÃO ============
 function carregarOuSemearMaquinas() {
     const saved = Storage.loadMachines();
@@ -360,14 +566,29 @@ function semearFilamentos() {
     }
 }
 
+function carregarOrcamento() {
+    const saved = Storage.loadPieces();
+    state.pieces = saved && Array.isArray(saved) ? saved : [];
+    document.getElementById('clientName').value = Storage.loadClient();
+    document.getElementById('quoteValidade').value = Storage.loadValidade();
+}
+
+function atualizarTudo() {
+    atualizar();
+    recalcularTodasPecas();
+}
+
 function inicializar() {
     carregarOuSemearMaquinas();
     semearFilamentos();
+    carregarOrcamento();
     renderMachineSelect();
     renderSlots();
+    renderBudget();
 
     document.getElementById('machineSelect').addEventListener('change', (e) => {
         selecionarMaquina(e.target.value);
+        recalcularTodasPecas();
     });
 
     document.getElementById('btnNovaMaquina').addEventListener('click', () => abrirFormMaquina());
@@ -381,15 +602,30 @@ function inicializar() {
 
     document.getElementById('btnAddSlot').addEventListener('click', () => adicionarSlot());
 
-    ['tempo', 'precoKwh', 'custoExtra', 'margem', 'desconto', 'quantidade'].forEach((id) => {
+    ['tempo', 'custoExtra', 'desconto', 'quantidade'].forEach((id) => {
         document.getElementById(id).addEventListener('input', atualizar);
+    });
+    // Estes três afetam também o orçamento
+    ['precoKwh', 'margem'].forEach((id) => {
+        document.getElementById(id).addEventListener('input', atualizarTudo);
     });
 
     document.querySelectorAll('.quick-buttons button').forEach((btn) => {
         btn.addEventListener('click', () => {
             document.getElementById('margem').value = btn.dataset.margem;
-            atualizar();
+            atualizarTudo();
         });
+    });
+
+    // Orçamento
+    document.getElementById('btnAddPiece').addEventListener('click', adicionarPeca);
+    document.getElementById('btnClearBudget').addEventListener('click', limparOrcamento);
+    document.getElementById('btnGeneratePDF').addEventListener('click', gerarPDF);
+    document.getElementById('clientName').addEventListener('input', (e) => {
+        Storage.saveClient(e.target.value);
+    });
+    document.getElementById('quoteValidade').addEventListener('input', (e) => {
+        Storage.saveValidade(e.target.value);
     });
 
     atualizar();

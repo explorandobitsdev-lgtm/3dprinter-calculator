@@ -92,6 +92,18 @@ const Calculator = {
         };
     },
 
+    /**
+     * Calcula custo e sugestão para uma única peça do orçamento.
+     * peca = { gramas, precoFilamento, horas, watts, precoKwh, margem }
+     */
+    peca({ gramas, precoFilamento, horas, watts, precoKwh, margem }) {
+        const cFilamento = this.custoFilamento(gramas || 0, precoFilamento || 0);
+        const cEnergia = this.custoEnergia(watts || 0, horas || 0, precoKwh || 0);
+        const custo = cFilamento + cEnergia;
+        const sugestao = custo * (1 + (margem || 0) / 100);
+        return { custoFilamento: cFilamento, custoEnergia: cEnergia, custo, sugestao };
+    },
+
     avaliarLucro(lucroPercent) {
         if (lucroPercent < 0) {
             return { nivel: 'danger', mensagem: 'Atenção: você está vendendo no PREJUÍZO!' };
