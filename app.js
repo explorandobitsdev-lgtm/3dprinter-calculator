@@ -226,7 +226,8 @@ function lerInputsGerais() {
         precoKwh: lerNum('precoKwh'),
         custoExtra: lerNum('custoExtra'),
         margem: lerNum('margem'),
-        desconto: lerNum('desconto')
+        desconto: lerNum('desconto'),
+        quantidade: Math.max(1, parseInt(document.getElementById('quantidade').value, 10) || 1)
     };
 }
 
@@ -255,11 +256,12 @@ function renderResultado(resultado, inputs) {
     document.getElementById('rPesoTotal').textContent =
         resultado.pesoTotal > 0 ? `(${resultado.pesoTotal.toFixed(1)} g)` : '';
 
-    const kwhConsumido = (inputs.watts / 1000) * inputs.tempo;
-
     document.getElementById('rCustoFilamento').textContent = formatBRL(resultado.custoFilamentos);
-    document.getElementById('rCustoEnergia').textContent =
-        `${formatBRL(resultado.custoEnergia)} (${formatKwh(kwhConsumido)})`;
+
+    const energiaFormula = `${inputs.watts}W × ${inputs.tempo}h × R$${inputs.precoKwh}/kWh`;
+    document.getElementById('rCustoEnergia').innerHTML =
+        `${formatBRL(resultado.custoEnergia)}<small>${energiaFormula} = ${formatKwh(resultado.kwhConsumido)}</small>`;
+
     document.getElementById('rCustoExtra').textContent = formatBRL(resultado.custoExtra);
     document.getElementById('rCustoTotal').textContent = formatBRL(resultado.custoTotal);
     document.getElementById('rPrecoBruto').textContent = formatBRL(resultado.precoBruto);
@@ -267,6 +269,25 @@ function renderResultado(resultado, inputs) {
     document.getElementById('rPrecoVenda').textContent = formatBRL(resultado.precoVenda);
     document.getElementById('rLucro').textContent =
         `${formatBRL(resultado.lucro.valor)} (${formatPercent(resultado.lucro.percent)})`;
+
+    renderPorPeca(resultado);
+}
+
+function renderPorPeca(resultado) {
+    const box = document.getElementById('porPecaBox');
+    if (!box) return;
+
+    if (resultado.quantidade <= 1) {
+        box.classList.add('hidden');
+        return;
+    }
+
+    box.classList.remove('hidden');
+    document.getElementById('pPecaQtd').textContent = `${resultado.quantidade} peças`;
+    document.getElementById('pPecaCusto').textContent = formatBRL(resultado.porPeca.custoTotal);
+    document.getElementById('pPecaVenda').textContent = formatBRL(resultado.porPeca.precoVenda);
+    document.getElementById('pPecaLucro').textContent = formatBRL(resultado.porPeca.lucro);
+    document.getElementById('pPecaPeso').textContent = `${resultado.porPeca.peso.toFixed(1)} g`;
 }
 
 function renderAlerta(lucroPercent) {
@@ -360,7 +381,7 @@ function inicializar() {
 
     document.getElementById('btnAddSlot').addEventListener('click', () => adicionarSlot());
 
-    ['tempo', 'precoKwh', 'custoExtra', 'margem', 'desconto'].forEach((id) => {
+    ['tempo', 'precoKwh', 'custoExtra', 'margem', 'desconto', 'quantidade'].forEach((id) => {
         document.getElementById(id).addEventListener('input', atualizar);
     });
 

@@ -99,6 +99,11 @@
                     </div>
 
                     <div class="field">
+                        <label for="quantidade">Quantidade de peças</label>
+                        <input type="number" id="quantidade" min="1" step="1" value="1">
+                    </div>
+
+                    <div class="field">
                         <label for="precoKwh">Energia (R$/kWh)</label>
                         <input type="number" id="precoKwh" min="0" step="0.01" value="0.95">
                     </div>
@@ -108,6 +113,7 @@
                         <input type="number" id="custoExtra" min="0" step="0.01" value="0">
                     </div>
                 </div>
+                <p class="hint">Se imprimir várias peças em um mesmo job, informe a quantidade — os valores totais e por peça serão calculados automaticamente.</p>
 
                 <h2 class="section-title">Preço</h2>
 
@@ -168,6 +174,28 @@
                 <div class="result-line highlight profit">
                     <span>Lucro</span>
                     <span id="rLucro">R$ 0,00 (0%)</span>
+                </div>
+
+                <div id="porPecaBox" class="por-peca hidden">
+                    <h3>Por peça <span class="por-peca-qtd" id="pPecaQtd"></span></h3>
+                    <div class="por-peca-grid">
+                        <div class="por-peca-item">
+                            <span>Peso</span>
+                            <strong id="pPecaPeso">0 g</strong>
+                        </div>
+                        <div class="por-peca-item">
+                            <span>Custo</span>
+                            <strong id="pPecaCusto">R$ 0,00</strong>
+                        </div>
+                        <div class="por-peca-item venda">
+                            <span>Preço de venda</span>
+                            <strong id="pPecaVenda">R$ 0,00</strong>
+                        </div>
+                        <div class="por-peca-item lucro">
+                            <span>Lucro</span>
+                            <strong id="pPecaLucro">R$ 0,00</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="alerta" class="alerta hidden"></div>

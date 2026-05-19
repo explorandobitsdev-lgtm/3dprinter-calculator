@@ -144,12 +144,12 @@ body {
 /* ============ CARDS ============ */
 .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 24px;
 }
 
 @media (max-width: 900px) {
-    .grid { grid-template-columns: 1fr; }
+    .grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 .card {
@@ -157,6 +157,8 @@ body {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 24px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .card h2 {
@@ -430,11 +432,15 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
 }
 
-.result-line small { color: var(--text-muted); font-weight: normal; }
+.result-line > span:first-child { color: var(--text-muted); }
+.result-line > span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.result-line small { color: var(--text-muted); font-weight: normal; display: block; font-size: 0.75rem; }
 
 .result-line:last-child { border-bottom: none; }
 
@@ -462,6 +468,59 @@ body {
     background: rgba(34, 197, 94, 0.1);
     color: var(--success);
 }
+
+.por-peca {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(56, 189, 248, 0.06);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 10px;
+}
+
+.por-peca h3 {
+    margin: 0 0 12px 0;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.por-peca-qtd {
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.por-peca-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.por-peca-item {
+    background: var(--bg-elevated);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.por-peca-item span {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.por-peca-item strong {
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.por-peca-item.venda strong { color: var(--highlight); }
+.por-peca-item.lucro strong { color: var(--success); }
 
 .alerta {
     margin-top: 16px;
